@@ -31,14 +31,14 @@ try:
     import arcpy
 except ImportError:
     from ArcpyMockup import ArcpyMockup
-    arcpy = ArcpyMockup()
 
+    arcpy = ArcpyMockup()
 
 __version__ = '0.3.0'
 """Version number of arcapi"""
 
 
-def names(x, filterer = None):
+def names(x, filterer=None):
     """Return list of column names of a table.
 
     Required:
@@ -47,15 +47,15 @@ def names(x, filterer = None):
     Optional:
     filterer -- function, only fields where filterer returns True are listed
 
-    Example:
-    >>> names('c:\\foo\\bar.shp', lambda f: f.name.startswith('eggs'))
+    Examples:
+        >>> names('c:\\foo\\bar.shp', lambda f: f.name.startswith('eggs'))  # noqa
     """
     flds = arcpy.ListFields(x)
     if filterer is None: filterer = lambda a: True
     return [f.name for f in flds if filterer(f)]
 
 
-def types(x, filterer = None):
+def types(x, filterer=None):
     """Return list of column types of a table.
 
     Required:
@@ -64,8 +64,8 @@ def types(x, filterer = None):
     Optional:
     filterer -- function, only fields where filterer returns True are listed
 
-    Example:
-    >>> types('c:\\foo\\bar.shp', lambda f: f.name.startswith('eggs'))
+    Examples:
+        >>> types('c:\\foo\\bar.shp', lambda f: f.name.startswith('eggs'))  # noqa
     """
     flds = arcpy.ListFields(x)
     if filterer is None: filterer = lambda a: True
@@ -135,7 +135,7 @@ def values(tbl, col, w='', o=None):
 
     # retrieve values with search cursor
     ret = []
-    with arcpy.da.SearchCursor(tbl, cols, where_clause = w, sql_clause=(None, o)) as sc:
+    with arcpy.da.SearchCursor(tbl, cols, where_clause=w, sql_clause=(None, o)) as sc:
         for row in sc:
             if multicols:
                 ret.append(row)
@@ -160,7 +160,7 @@ def frequency(x):
     x.sort()
     fq = {}
     for i in x:
-        if i in fq: #has_key deprecated in 3.x
+        if i in fq:  # has_key deprecated in 3.x
             fq[i] += 1
         else:
             fq[i] = 1
@@ -184,7 +184,7 @@ def distinct(tbl, col, w=''):
     return list(set(values(tbl, col, w)))
 
 
-def print_tuples(x, delim=" ", tbl=None, geoms=None, fillchar=" ",  padding=1, verbose=True, returnit = False):
+def print_tuples(x, delim=" ", tbl=None, geoms=None, fillchar=" ", padding=1, verbose=True, returnit=False):
     """Print and/or return list of tuples formatted as a table.
 
 
@@ -215,7 +215,7 @@ def print_tuples(x, delim=" ", tbl=None, geoms=None, fillchar=" ",  padding=1, v
         tps = ["LONG" if str(ti).isdigit() else "TEXT" for ti in x[0]]
         geoms = None
     else:
-        nms,tps = [],[]
+        nms, tps = [], []
         i = 0
         if isinstance(tbl, list) or isinstance(tbl, tuple):
             fields = tbl
@@ -225,11 +225,11 @@ def print_tuples(x, delim=" ", tbl=None, geoms=None, fillchar=" ",  padding=1, v
             nms.append(f.name)
             tps.append(f.type)
             if f.type.lower() == "geometry" and geoms is not None:
-                gi = i # index of geometry column
+                gi = i  # index of geometry column
             i += 1
     nmirange = range(len(nms))
     toLeft = []
-    leftTypes = ("STRING", "TEXT") # field types to be left justified
+    leftTypes = ("STRING", "TEXT")  # field types to be left justified
     for nmi in range(len(nms)):
         if tps[nmi].upper() in leftTypes:
             toLeft.append(nmi)
@@ -245,16 +245,14 @@ def print_tuples(x, delim=" ", tbl=None, geoms=None, fillchar=" ",  padding=1, v
             if clen > widths[nmi]:
                 widths[nmi] = clen
 
-
     sbuilder = []
     frmtd = []
     for nmi in range(len(nms)):
         pad = widths[nmi] + lpadding + rpadding
         frmtd.append(str(nms[nmi]).center(pad, fch))
 
-
     hdr = delim.join(frmtd)
-    if verbose: print hdr # print header
+    if verbose: print hdr  # print header
     sbuilder.append(hdr)
     for r in x:
         frmtd = []
@@ -280,11 +278,9 @@ def print_tuples(x, delim=" ", tbl=None, geoms=None, fillchar=" ",  padding=1, v
             frmtd.append(valf)
         rw = delim.join(frmtd)
 
-
         if verbose:
-            print rw # print row
+            print rw  # print row
         sbuilder.append(rw)
-
 
     ret = "\n".join(sbuilder) if returnit else None
     return ret
@@ -312,7 +308,7 @@ def head(tbl, n=10, t=True, delimiter="; ", geoms=None, cols=["*"], w="", verbos
     Example:
     >>> tmp = head('c:\\foo\\bar.shp', 5, True, "|", " ")
     """
-    allcols = ['*', ['*'], ('*'), [], ()]
+    allcols = ['*', ['*'], ('*',), [], ()]
     colslower = [c.lower() for c in cols]
     flds = arcpy.ListFields(arcpy.Describe(tbl).catalogPath)
     if cols not in allcols:
@@ -324,10 +320,10 @@ def head(tbl, n=10, t=True, delimiter="; ", geoms=None, cols=["*"], w="", verbos
         f = flds[i]
         if cols in allcols or f.name in cols:
             fieldnames.append(f.name)
-            fs.update({i: {"name":f.name, "values":[]}})
+            fs.update({i: {"name": f.name, "values": []}})
     i = 0
     hd = []
-    with arcpy.da.SearchCursor(tbl, fieldnames, where_clause = w) as sc:
+    with arcpy.da.SearchCursor(tbl, fieldnames, where_clause=w) as sc:
         for row in sc:
             i += 1
             if i > n: break
@@ -335,21 +331,20 @@ def head(tbl, n=10, t=True, delimiter="; ", geoms=None, cols=["*"], w="", verbos
             for j in range(nflds):
                 fs[j]["values"].append(row[j])
 
-
     if t:
         labels = []
         values = []
         for fld in range(nflds):
             f = fs[fld]
             fl = flds[fld]
-            labels.append(str(fl.name) + " (" + str(fl.type) +  "," + str(fl.length) + ")")
+            labels.append(str(fl.name) + " (" + str(fl.type) + "," + str(fl.length) + ")")
             if fl.type.lower() == 'geometry' and (geoms is not None):
                 values.append(delimiter.join(map(str, len(f["values"]) * [geoms])))
             else:
                 values.append(delimiter.join(map(str, f["values"])))
         longestLabel = max(map(len, labels))
-        for l,v in zip(labels, values):
-            toprint = l.ljust(longestLabel, ".") +  ": " + v
+        for lbl, v in zip(labels, values):
+            toprint = lbl.ljust(longestLabel, ".") + ": " + v
             arcpy.AddMessage(toprint)
             if verbose:
                 print toprint
@@ -357,6 +352,8 @@ def head(tbl, n=10, t=True, delimiter="; ", geoms=None, cols=["*"], w="", verbos
         if verbose:
             print_tuples(hd, delim=delimiter, tbl=flds, geoms=geoms, returnit=False)
     return [hd, fs]
+
+
 def chart(x, out_file='c:\\temp\\chart.jpg', texts={}, template=None, resolution=95, openit=True):
     """Create and open a map (JPG) showing x and return path to the figure path.
 
@@ -383,12 +380,12 @@ def chart(x, out_file='c:\\temp\\chart.jpg', texts={}, template=None, resolution
 
     mxd = arcpy.mapping.MapDocument(template)
     if not arcpy.Exists(x):
-        x = arcpy.CopyFeatures_management(x, arcpy.CreateScratchName('tmp', workspace = 'in_memory')).getOutput(0)
+        x = arcpy.CopyFeatures_management(x, arcpy.CreateScratchName('tmp', workspace='in_memory')).getOutput(0)
         todel = [x]
     dtype = arcpy.Describe(x).dataType
     df = arcpy.mapping.ListDataFrames(mxd)[0]
 
-    lr = "chart" + tstamp(tf = "%H%M%S")
+    lr = "chart" + tstamp(tf="%H%M%S")
     if arcpy.Exists(lr) and arcpy.Describe(lr).dataType in ('FeatureLayer', 'RasterLayer'):
         arcpy.Delete_management(lr)
     if "raster" in dtype.lower():
@@ -405,7 +402,7 @@ def chart(x, out_file='c:\\temp\\chart.jpg', texts={}, template=None, resolution
             texel = arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", tel)[0]
             texel.text = str(texts[tel])
         except Exception, e:
-            arcpy.AddMessage("Error when updating text element " + str(tel) + ": "+ str(e))
+            arcpy.AddMessage("Error when updating text element " + str(tel) + ": " + str(e))
     arcpy.RefreshActiveView()
     arcpy.mapping.ExportToJPEG(mxd, out_file, resolution=resolution)
 
@@ -422,7 +419,7 @@ def chart(x, out_file='c:\\temp\\chart.jpg', texts={}, template=None, resolution
     return arcpy.Describe(out_file).catalogPath
 
 
-def plot(x, y=None, out_file="c:\\temp\\plot.png", main="Arcapi Plot", xlab="X", ylab="Y", pch="+", color="r", openit=True):
+def plot(x, y=None, out_file="c:\\temp\\plot.png", title="Arcapi Plot", xlab="X", ylab="Y", pch="+", color="r", openit=True):
     """
     Create and display a plot (PNG) showing x (and y).
 
@@ -448,12 +445,12 @@ def plot(x, y=None, out_file="c:\\temp\\plot.png", main="Arcapi Plot", xlab="X",
         D: diamond, h: hexagon, ^: triangle
     openit -- if True (default), exported figure is opened in a webbrowser
 
-    Example:
-    >>> x = xrange(20)
-    >>> plot(x)
-    >>> plot(x, out_file='c:\\temp\\pic.png')
-    >>> y = xrange(50,70)
-    >>> plot(x, y, 'c:\\temp\\pic.png', 'Main', 'X [m]', 'Y [m]', 'o', 'k')
+    Examples:
+        >>> x = xrange(20)  # noqa
+        >>> plot(x)
+        >>> plot(x, out_file='c:\\temp\\pic.png')
+        >>> y = xrange(50,70)  # noqa
+        >>> plot(x, y, 'c:\\temp\\pic.png', 'Main', 'X [m]', 'Y [m]', 'o', 'k')
     """
     import re
     if not re.findall(".png", out_file, flags=re.IGNORECASE): out_file += ".png"
@@ -469,7 +466,7 @@ def plot(x, y=None, out_file="c:\\temp\\plot.png", main="Arcapi Plot", xlab="X",
 
     from matplotlib import pyplot as plt
     plt.scatter(x, y, c=color, marker=pch)
-    plt.title(str(main))
+    plt.title(str(title))
     plt.xlabel(str(xlab))
     plt.ylabel(str(ylab))
     plt.savefig(out_file)
@@ -516,15 +513,15 @@ def hist(x, out_file='c:\\temp\\hist.png', openit=True, **args):
     openit -- if True (default), exported figure is opened in a webbrowser
 
     Example:
-    >>> x = numpy.random.randn(10000)
+    >>> x = numpy.random.randn(10000)  # noqa
     >>> hist(x)
-    >>> hist(x, bins=20, color='r', main='A Title", xlab='Example')
+    >>> hist(x, bins=20, color='r', main='A Title', xlab='Example')
     """
     import matplotlib.pyplot as plt
 
     # sort out parameters
-    extras =  ('main', 'xlab', 'ylab')
-    pars = dict([(k,v) for k,v in args.iteritems() if k not in extras])
+    extras = ('main', 'xlab', 'ylab')
+    pars = dict([(k, v) for k, v in args.iteritems() if k not in extras])
 
     h = plt.hist(x, **pars)
 
@@ -583,7 +580,7 @@ def bars(x, out_file='c:\\temp\\hist.png', openit=True, **args):
     openit -- if True (default), exported figure is opened in a webbrowser
 
     Example:
-    >>> x = [1,2,3,4,5]
+    >>> x = [1,2,3,4,5]  # noqa
     >>> lb = ['A','B','C','D','E']
     >>> bars(x)
     >>> bars(x, labels=lb, color='r', main='A Title', orientation='vertical')
@@ -594,7 +591,7 @@ def bars(x, out_file='c:\\temp\\hist.png', openit=True, **args):
     width = 1.0
     # unpack arguments
     bpars = ['width', 'color', 'edgecolor', 'linewidth', 'xerr', 'yerr',
-    'ecolor', 'capsize','error_kw', 'orientation', 'log']
+             'ecolor', 'capsize', 'error_kw', 'orientation', 'log']
     barpars = dict([(i, args.get(i, None)) for i in args if i in bpars])
     barpars['align'] = 'center'
     center = range(len(x))
@@ -682,8 +679,8 @@ def pie(x, y=None, **kwargs):
     import matplotlib.pyplot as plt
 
     # unpack arguments
-    #y = kwargs.get('y', None) # more convenient to get as a named argument
-    out_file =kwargs.get('out_file', 'c:\\temp\\hist.png')
+    # y = kwargs.get('y', None) # more convenient to get as a named argument
+    out_file = kwargs.get('out_file', 'c:\\temp\\hist.png')
     openit = kwargs.get('openit', True)
     #
     explode = kwargs.get('explode', None)
@@ -707,18 +704,18 @@ def pie(x, y=None, **kwargs):
     if y is not None:
         if n != len(y):
             raise ArcapiError("Lenghts of x and y must match, %s != %s" %
-                (n, len(y))
-            )
+                              (n, len(y))
+                              )
 
         freqs = {}
-        for xi,yi in zip(x,y):
+        for xi, yi in zip(x, y):
             if yi in freqs:
                 freqs[yi] += xi
             else:
                 freqs[yi] = xi
 
-        x,y = [],[]
-        for k,v in freqs.iteritems():
+        x, y = [], []
+        for k, v in freqs.iteritems():
             x.append(v)
             y.append(k)
         labels = y
@@ -728,24 +725,24 @@ def pie(x, y=None, **kwargs):
     if explode is not None:
         if isinstance(explode, list) or isinstance(explode, tuple):
             if len(explode) != n:
-                explode = ( explode * n )[0:n]
+                explode = (explode * n)[0:n]
         else:
             explode = [explode] * n
     if labels is not None:
         if isinstance(labels, list) or isinstance(labels, tuple):
             if len(labels) != n:
-                labels = ( labels * n )[0:n]
+                labels = (labels * n)[0:n]
         else:
             labels = [labels] * n
     if colors is not None:
         if isinstance(colors, list) or isinstance(colors, tuple):
             if len(colors) != n:
-                colors = ( colors * n )[0:n]
+                colors = (colors * n)[0:n]
         else:
             colors = [colors] * n
 
     plt.figure(1)
-    plt.subplot(1,1,1)
+    plt.subplot(1, 1, 1)
     pieresult = plt.pie(
         x,
         explode=explode,
@@ -784,7 +781,7 @@ def pie(x, y=None, **kwargs):
     return
 
 
-def rename_col(tbl, col, newcol, alias = ''):
+def rename_col(tbl, col, newcol, alias=''):
     """Rename column in table tbl and return the new name of the column.
 
     This function first adds column newcol, re-calculates values of col into it,
@@ -805,7 +802,7 @@ def rename_col(tbl, col, newcol, alias = ''):
         dcp = d.catalogPath
         flds = arcpy.ListFields(tbl)
         fnames = [f.name.lower() for f in flds]
-        newcol = arcpy.ValidateFieldName(newcol, tbl) #os.path.dirname(dcp))
+        newcol = arcpy.ValidateFieldName(newcol, tbl)  # os.path.dirname(dcp))
         if col.lower() not in fnames:
             raise ArcapiError("Field %s not found in %s." % (col, dcp))
         if newcol.lower() in fnames:
@@ -860,7 +857,7 @@ def tlist_to_table(x, out_tbl, cols, nullNumber=None, nullText=None):
     doReplace = doReplaceNumber or doReplaceText
 
     dname = os.path.dirname(out_tbl)
-    if dname in('', u''): dname = arcpy.env.workspace
+    if dname in ('', u''): dname = arcpy.env.workspace
     r = arcpy.CreateTable_management(dname, os.path.basename(out_tbl))
     out_tbl = r.getOutput(0)
     # add the specified fields
@@ -889,7 +886,7 @@ def tlist_to_table(x, out_tbl, cols, nullNumber=None, nullText=None):
     return out_tbl
 
 
-def docu(x, n = None):
+def docu(x, n=None):
     """Print x.__doc__ string of the argument line by line using Python's print.
 
     Similar to builtin help() but allows to limit number of rows printed.
@@ -950,7 +947,7 @@ def meta(datasource, mode="PREPEND", **args):
     >>> meta(fc, 'append', purpose='example', abstract='Column Spam means eggs')
     """
     import xml.etree.ElementTree as ET
-    xslt = None # metadata template, could be exposed as a parameter
+    xslt = None  # metadata template, could be exposed as a parameter
     sf = arcpy.env.scratchFolder
     tmpmetadatafile = arcpy.CreateScratchName('tmpmetadatafile', workspace=sf)
 
@@ -980,7 +977,7 @@ def meta(datasource, mode="PREPEND", **args):
     readonly = True if len(args) == 0 else False
     reader = {}
     if readonly:
-        args = {'title':'', 'purpose':'', 'abstract': ''}
+        args = {'title': '', 'purpose': '', 'abstract': ''}
     else:
         # Update the metadata version if it is not up to date
         if tree.find('dataIdInfo') is None:
@@ -1002,7 +999,7 @@ def meta(datasource, mode="PREPEND", **args):
         entries.update({'dataIdInfo/idAbs': args.get('abstract')})
 
     # update entries
-    for p,t in entries.iteritems():
+    for p, t in entries.iteritems():
         el = tree.find(p)
         if el is None:
             if not readonly:
@@ -1012,7 +1009,7 @@ def meta(datasource, mode="PREPEND", **args):
                 parent = tree.find(pparent)
                 if parent is None:
                     em = "Could not find parent %s as parent of %s in %s " % \
-                        (pparent, p, str(datasource))
+                         (pparent, p, str(datasource))
                     raise ArcapiError(em)
                 subel = ET.SubElement(parent, p.split("/")[-1])
                 subel.text = str(t)
@@ -1040,11 +1037,13 @@ def meta(datasource, mode="PREPEND", **args):
 
     # import new xml file as metadata
     r = arcpy.MetadataImporter_conversion(tmpmetadatafile, datasource)
-    msg("Updated metadata for " +  str(datasource))
+    msg("Updated metadata for " + str(datasource))
 
     # try to clean up
-    try: os.remove(tmpmetadatafile)
-    except: pass
+    try:
+        os.remove(tmpmetadatafile)
+    except:
+        pass
 
     return reader
 
@@ -1094,7 +1093,7 @@ def msg(x, timef='%Y-%m-%d %H:%M:%S', verbose=True, log=None, level='message'):
             arcpy.AddError("T:" + m)
             doexit = True
         else:
-            em = "Level %s not in 'message'|'warning'|'error'|0|1|2." % (level)
+            em = "Level %s not in 'message'|'warning'|'error'|0|1|2." % level
             raise ArcapiError(em)
 
     if log not in ("", None):
@@ -1102,8 +1101,10 @@ def msg(x, timef='%Y-%m-%d %H:%M:%S', verbose=True, log=None, level='message'):
             fl.write("P:" + tstamp + ": " + x + "\n")
 
     if doexit:
-        try: sys.exit()
-        except: pass
+        try:
+            sys.exit()
+        except:
+            pass
 
 
 def list_environments(x=[], printit=False):
@@ -1140,7 +1141,7 @@ def shpF(fc):
     return arcpy.Describe(fc).ShapeFieldName
 
 
-def tstamp(p = "", tf="%Y%m%d%H%M%S", d="_", m=False, s=()):
+def tstamp(p="", tf="%Y%m%d%H%M%S", d="_", m=False, s=()):
     """Returns time stamped string.
 
     Return string like p + time in tf + d + s[0] + d + s[1] + d + ... s[n]
@@ -1153,11 +1154,11 @@ def tstamp(p = "", tf="%Y%m%d%H%M%S", d="_", m=False, s=()):
     s -- tuple or list of postfixes
 
     Example:
-    >>> ap.tstamp() # '20140216184029'
-    >>> ap.tstamp("lr") # 'lr20140216184045'
-    >>> ap.tstamp("lr", "%H%M%S") # 'lr184045'
-    >>> ap.tstamp("lr", "%H%M%S") # 'lr184045'
-    >>> ap.tstamp("lr", "%H%M%S", s=('run',1)) # 'lr184527_run_1'
+    >>> tstamp() # '20140216184029'
+    >>> tstamp("lr") # 'lr20140216184045'
+    >>> tstamp("lr", "%H%M%S") # 'lr184045'
+    >>> tstamp("lr", "%H%M%S") # 'lr184045'
+    >>> tstamp("lr", "%H%M%S", s=('run',1)) # 'lr184527_run_1'
     """
     bits = str(d).join(map(str, s))
     if bits: bits = d + bits
@@ -1227,9 +1228,9 @@ def to_points(tbl, out_fc, xcol, ycol, sr, zcol='#', w=''):
     Example:
     >>> t = 'c:\\foo\\bar.shp'
     >>> o = 'c:\\foo\\bar_pts.shp'
-    >>> table_to_points(t, o, "XC", "YC", 4326, zcol='#', w='"FID" < 10')
-    >>> table_to_points(t, o, "XC", "YC", arcpy.SpatialReference(27700))
-    >>> table_to_points(t, o, "XC", "YC", arcpy.describe(tbl).spatialReference)
+    >>> to_points(t, o, "XC", "YC", 4326, zcol='#', w='"FID" < 10')
+    >>> to_points(t, o, "XC", "YC", arcpy.SpatialReference(27700))
+    >>> to_points(t, o, "XC", "YC", arcpy.describe(tbl).spatialReference)
     """
     lrnm = tstamp('lr', '%m%d%H%M%S', '')
     if type(sr) != arcpy.SpatialReference:
@@ -1239,7 +1240,7 @@ def to_points(tbl, out_fc, xcol, ycol, sr, zcol='#', w=''):
         arcpy.SelectLayerByAttribute_management(lr, "NEW_SELECTION", w)
     out_fc = arcpy.CopyFeatures_management(lr, out_fc).getOutput(0)
     dlt(lr)
-    return (arcpy.Describe(out_fc).catalogPath)
+    return arcpy.Describe(out_fc).catalogPath
 
 
 def update_col_from_dict(x, y, xcol, xidcol=None, xw='', na=None):
@@ -1269,7 +1270,7 @@ def update_col_from_dict(x, y, xcol, xidcol=None, xw='', na=None):
         xidcol = arcpy.Describe(x).OIDFieldName
 
     # indicate whether to leave nonmatching values unchenged or set to na
-    identity = False if na != (1,1) else True
+    identity = False if na != (1, 1) else True
 
     if xcol == xidcol:
         selfupdate = True
@@ -1279,7 +1280,7 @@ def update_col_from_dict(x, y, xcol, xidcol=None, xw='', na=None):
         cols = [xidcol, xcol]
 
     cnt = 0
-    with arcpy.da.UpdateCursor(x, cols, where_clause = xw) as uc:
+    with arcpy.da.UpdateCursor(x, cols, where_clause=xw) as uc:
         for row in uc:
             ido = row[0]
 
@@ -1328,11 +1329,11 @@ def to_scratch(name, enforce=False):
         exist in scratch workspace, otherwise returns basename equal to name.
 
     Example:
-    >>> to_scratch('foo', 0) # '...\\scratch.gdb\\foo'
-    >>> to_scratch('foo', 1) # '...\\scratch.gdb\\foo0'
-    >>> to_scratch('foo.shp', 0) # '...\\scratch.gdb\\foo_shp'
-    >>> to_scratch('foo.shp', 1) # '...\\scratch.gdb\\foo_shp0'
-    >>> tos('foo', 0) # '...\\scratch.gdb\\foo'
+    >>> to_scratch('foo', 0)  # noqa '...\\scratch.gdb\\foo'
+    >>> to_scratch('foo', 1)  # noqa '...\\scratch.gdb\\foo0'
+    >>> to_scratch('foo.shp', 0)  # noqa '...\\scratch.gdb\\foo_shp'
+    >>> to_scratch('foo.shp', 1)  # noqa '...\\scratch.gdb\\foo_shp0'
+    >>> tos('foo', 0) # '...\\scratch.gdb\\foo'  # noqa
     """
     ws = arcpy.env.scratchWorkspace
     if ws is None: ws = arcpy.env.workspace
@@ -1352,7 +1353,7 @@ def to_scratch(name, enforce=False):
     return nm
 
 
-def wsp(ws = None):
+def wsp(ws=None):
     """Get or set arcpy.env.workspace and return its path.
 
     If ws is None and arcpy.env.workspace is None, this function will set
@@ -1382,7 +1383,7 @@ def wsp(ws = None):
     return arcpy.env.workspace
 
 
-def swsp(ws = None):
+def swsp(ws=None):
     """Get or set arcpy.env.scratchWorkspace and return its path.
 
     If ws is None and arcpy.env.scratchWorkspace is None, this function will set
@@ -1414,7 +1415,7 @@ def swsp(ws = None):
     return arcpy.env.scratchWorkspace
 
 
-def summary(tbl, cols=['*'], modes=None, maxcats=10, w='', verbose=True):
+def summary(tbl, cols=('*'), modes=None, maxcats=10, w='', verbose=True):
     """Summary statistics about columns of a table.
 
     Required:
@@ -1444,7 +1445,7 @@ def summary(tbl, cols=['*'], modes=None, maxcats=10, w='', verbose=True):
     modetypes = ("NUM", "CAT", "IGNORE")
     fields = arcpy.ListFields(tbl)
     fields = dict([(f.name, f) for f in fields])
-    if cols in([], ['*'], None):
+    if cols in ([], ['*'], None):
         cols = fields.keys()
 
     if modes is None:
@@ -1452,7 +1453,7 @@ def summary(tbl, cols=['*'], modes=None, maxcats=10, w='', verbose=True):
         for c in cols:
             fld = fields.get(c, None)
             if fld is None:
-                raise ArcapiError("Column %s not found." % (c))
+                raise ArcapiError("Column %s not found." % c)
             fldtype = fld.type.upper()
             if fldtype in numtypes:
                 modes.append("NUM")
@@ -1473,10 +1474,10 @@ def summary(tbl, cols=['*'], modes=None, maxcats=10, w='', verbose=True):
         stats[ci] = {
             "col": colname,
             "type": getattr(fields.get(colname, None), 'type', None),
-            "cats": {}, "min":None, "max":None, "n": 0, "na": 0
+            "cats": {}, "min": None, "max": None, "n": 0, "na": 0
         }
 
-    with arcpy.da.SearchCursor(tbl, cols, where_clause = w) as sc:
+    with arcpy.da.SearchCursor(tbl, cols, where_clause=w) as sc:
         for row in sc:
             for ci in cixs:
                 mode = modes[ci]
@@ -1492,7 +1493,7 @@ def summary(tbl, cols=['*'], modes=None, maxcats=10, w='', verbose=True):
                             if ncats < maxcats:
                                 cats[v] = 1
                             else:
-                                cats[('...')] = cats.get(('...'), 0) + 1
+                                cats['...'] = cats.get(('...'), 0) + 1
                 elif mode == "NUM":
                     if v is None:
                         statsci["na"] += 1
@@ -1523,10 +1524,10 @@ def summary(tbl, cols=['*'], modes=None, maxcats=10, w='', verbose=True):
             print str(tbl)
             print str(arcpy.Describe(tbl).catalogPath)
             print fulline
-            for j,i in stats.iteritems():
+            for j, i in stats.iteritems():
                 mode = modes[j]
                 print 'COLUMN'.ljust(width) + ": " + str(i.get('col', None))
-                print 'type'.ljust(width) + ": "+ str(i.get('type', None))
+                print 'type'.ljust(width) + ": " + str(i.get('type', None))
                 if mode == "NUM":
                     print 'min'.ljust(width) + ": " + str(i.get('min', None))
                     print 'max'.ljust(width) + ": " + str(i.get('max', None))
@@ -1538,7 +1539,7 @@ def summary(tbl, cols=['*'], modes=None, maxcats=10, w='', verbose=True):
                     cats = i["cats"]
                     if len(cats) > 0:
                         print "CATEGORIES:"
-                        catable = sorted(zip(cats.keys(), cats.values()), key = lambda a: a[1], reverse = True)
+                        catable = sorted(zip(cats.keys(), cats.values()), key=lambda a: a[1], reverse=True)
                         print_tuples(catable)
                 else:
                     pass
@@ -1562,8 +1563,8 @@ def remap_sa(st, stop, step, n=1):
     n -- new value interval, default is 1 (int)
     """
 
-    tups = [[i,i+step] for i in range(st, stop, step)]
-    return [[t] + [(tups.index(t)+1)*n] for t in tups]
+    tups = [[i, i + step] for i in range(st, stop, step)]
+    return [[t] + [(tups.index(t) + 1) * n] for t in tups]
 
 
 def remap_3d(st, stop, step, n=1):
@@ -1584,8 +1585,8 @@ def remap_3d(st, stop, step, n=1):
     '50 60 1;60 70 2;70 80 3'
     """
 
-    tups = [[i,i+step] for i in range(st, stop, step)]
-    return ';'.join(' '.join([str(i) for i in t] + [str((tups.index(t)+1)*n)]) for t in tups)
+    tups = [[i, i + step] for i in range(st, stop, step)]
+    return ';'.join(' '.join([str(i) for i in t] + [str((tups.index(t) + 1) * n)]) for t in tups)
 
 
 def find(pattern, path, sub_dirs=True):
@@ -1629,14 +1630,14 @@ def int_to_float(raster, out_raster, decimals):
     decimals -- number of places to to move decimal for each cell
 
     Example:
-    >>> convertIntegerToFloat(r'C:\Temp\ndvi_int', r'C:\Temp\ndvi_float', 4)
+    >>> convertIntegerToFloat('C:/Temp/ndvi_int', 'C:/Temp/ndvi_float', 4)
     """
     try:
         import arcpy.sa as sa
 
         # check out license
         arcpy.CheckOutExtension('Spatial')
-        fl_rast = sa.Float(arcpy.Raster(raster) / float(10**int(decimals)))
+        fl_rast = sa.Float(arcpy.Raster(raster) / float(10 ** int(decimals)))
         try:
             fl_rast.save(out_raster)
         except:
@@ -1651,7 +1652,7 @@ def int_to_float(raster, out_raster, decimals):
         except:
             pass
 
-        msg('Created: %s' %out_raster)
+        msg('Created: %s' % out_raster)
         arcpy.CheckInExtension('Spatial')
         return out_raster
     except ImportError:
@@ -1674,7 +1675,7 @@ def fill_no_data(in_raster, out_raster, w=5, h=5):
     h -- search radius height for focal stats (rectangle)
 
     Example:
-    >>> fill_no_data(r'C:\Temp\ndvi', r'C:\Temp\ndvi_filled', 10, 10)
+    >>> fill_no_data('C:/Temp/ndvi', r'C:/Temp/ndvi_filled', 10, 10)
     """
     try:
         import arcpy.sa as sa
@@ -1687,7 +1688,7 @@ def fill_no_data(in_raster, out_raster, w=5, h=5):
 
         # Fill NoData
         arcpy.CheckOutExtension('Spatial')
-        filled = sa.Con(sa.IsNull(temp),sa.FocalStatistics(temp,sa.NbrRectangle(w,h),'MEAN'),temp)
+        filled = sa.Con(sa.IsNull(temp), sa.FocalStatistics(temp, sa.NbrRectangle(w, h), 'MEAN'), temp)
         filled.save(out_raster)
         arcpy.BuildPyramids_management(out_raster)
         arcpy.CheckInExtension('Spatial')
@@ -1695,7 +1696,7 @@ def fill_no_data(in_raster, out_raster, w=5, h=5):
         # Delete original and replace
         if arcpy.Exists(temp):
             arcpy.Delete_management(temp)
-        msg('Filled NoData Cells in: %s' %out_raster)
+        msg('Filled NoData Cells in: %s' % out_raster)
         return out_raster
     except ImportError:
         return 'Module arcpy.sa not found.'
@@ -1731,7 +1732,7 @@ def meters_to_feet(in_dem, out_raster, factor=3.28084):
             arcpy.BuildPyramids_management(out_raster)
         except:
             pass
-        arcpy.AddMessage('Created: %s' %out_raster)
+        arcpy.AddMessage('Created: %s' % out_raster)
         arcpy.CheckInExtension('Spatial')
         return out_raster
     except ImportError:
@@ -1768,7 +1769,7 @@ def fixArgs(arg, arg_type=list):
         if isinstance(arg, str):
             # need to replace extra quotes for paths with spaces
             # or anything else that has a space in it
-            return map(lambda a: a.replace("';'",";"), arg.split(';'))
+            return map(lambda a: a.replace("';'", ";"), arg.split(';'))
         else:
             return list(arg)
     if arg_type == float:
@@ -1840,7 +1841,7 @@ def make_poly_from_extent(ext, sr):
     return arcpy.Polygon(array, sr)
 
 
-def list_all_fcs(gdb, wild = '*', ftype='All', rel=False):
+def list_all_fcs(gdb, wild='*', ftype='All', rel=False):
     """Return a list of all feature classes in a geodatabase.
 
     if rel is True, only relative paths will be returned.  If
@@ -1909,7 +1910,7 @@ def list_all_fcs(gdb, wild = '*', ftype='All', rel=False):
         return sorted([os.path.join(gdb, ft) for ft in feats])
 
 
-def field_list(in_fc, filterer=[], oid=True, shape=True, objects=False):
+def field_list(in_fc, filterer=(), oid=True, shape=True, objects=False):
     """Return a list of fields or a list of field objects on input feature class.
 
     This function will handle list comprehensions to either return field names
@@ -1943,12 +1944,12 @@ def field_list(in_fc, filterer=[], oid=True, shape=True, objects=False):
     # return either field names or field objects
     if objects:
         return [f for f in arcpy.ListFields(in_fc)
-                      if f.type not in ex_type
-                      and f.name.lower() not in exclude]
+                if f.type not in ex_type
+                and f.name.lower() not in exclude]
     else:
         return [f.name.encode('utf-8') for f in arcpy.ListFields(in_fc)
-                      if f.type not in ex_type
-                      and f.name.lower() not in exclude]
+                if f.type not in ex_type
+                and f.name.lower() not in exclude]
 
 
 def get_field_type(in_field, fc=''):
@@ -2012,7 +2013,8 @@ def match_field(table_or_list, pat, multi=False):
                 all_mats.append(f)
     return all_mats
 
-def add_fields_from_table(in_tab, template, add_fields=[]):
+
+def add_fields_from_table(in_tab, template, add_fields=()):
     """Add fields (schema only) from one table to another
 
     Required:
@@ -2104,11 +2106,11 @@ def join_using_dict(source_table, in_field, join_table, join_key, join_values=[]
     join_key -- common field to match values to source_table
     join_values -- fields to add from join_table to source_table
 
-    Example:
-    >>> parcels = r'C:\Temp\Parcels.gdb\Parcels'
-    >>> permits = r'C:\Temp\Parcels.gdb\Permits'
-    >>> add_flds = ['PERMIT_NUM', 'PERMIT_DATE', 'NOTE']
-    >>> join_using_dict(parcels, 'PIN', permits', 'PARCEL_ID', add_flds)
+    Examples:
+        >>> parcels = r'C:\Temp\Parcels.gdb\Parcels'
+        >>> permits = r'C:\Temp\Parcels.gdb\Permits'
+        >>> add_flds = ['PERMIT_NUM', 'PERMIT_DATE', 'NOTE']
+        >>> join_using_dict(parcels, 'PIN', 'permits', 'PARCEL_ID', add_flds)
     """
 
     # test version for cursor type (data access module available @ 10.1 +)
@@ -2117,12 +2119,11 @@ def join_using_dict(source_table, in_field, join_table, join_key, join_values=[]
     if ver != '10.0':
         dataAccess = True
 
-
     # Get Catalog path (for feature layers and table views)
     cat_path = arcpy.Describe(source_table).catalogPath
 
     # Find out if source table is NULLABLE
-    if not os.path.splitext(cat_path)[1] in ['.dbf','.shp']:
+    if not os.path.splitext(cat_path)[1] in ['.dbf', '.shp']:
         nullable = 'NULLABLE'
     else:
         nullable = 'NON_NULLABLE'
@@ -2141,8 +2142,8 @@ def join_using_dict(source_table, in_field, join_table, join_key, join_values=[]
         for fldb in join_values:
             if fldb == name:
                 name = create_field_name(source_table, fldb)
-                arcpy.AddField_management(source_table,name,ftype,pres,scale,length,alias,nullable,'',domain)
-                msg("Added '%s' field to \"%s\"" %(name, os.path.basename(source_table)))
+                arcpy.AddField_management(source_table, name, ftype, pres, scale, length, alias, nullable, '', domain)
+                msg("Added '%s' field to \"%s\"" % (name, os.path.basename(source_table)))
                 update_fields.insert(join_values.index(fldb), name.encode('utf-8'))
 
     # update new fields
@@ -2157,17 +2158,18 @@ def join_using_dict(source_table, in_field, join_table, join_key, join_values=[]
 
         # Update Cursor
         update_index = list(range(len(update_fields)))
-        row_index = list(x+1 for x in update_index)
+        row_index = list(x + 1 for x in update_index)
         update_fields.insert(0, in_field)
         with arcpy.da.UpdateCursor(source_table, update_fields) as urows:
             for row in urows:
                 if row[0] in path_dict:
                     try:
-                        allVals =[path_dict[row[0]][i] for i in update_index]
-                        for r,v in zip(row_index, allVals):
+                        allVals = [path_dict[row[0]][i] for i in update_index]
+                        for r, v in zip(row_index, allVals):
                             row[r] = v
                         urows.updateRow(row)
-                    except: pass
+                    except:
+                        pass
 
     else:
         # version 10.0
@@ -2183,15 +2185,16 @@ def join_using_dict(source_table, in_field, join_table, join_key, join_values=[]
             if theVal in path_dict:
                 try:
                     for i in range(len(update_fields)):
-                        row.setValue(update_fields[i],path_dict[theVal][i])
+                        row.setValue(update_fields[i], path_dict[theVal][i])
                     rows.updateRow(row)
-                except: pass
+                except:
+                    pass
         del rows
-    msg('Fields in "%s" updated successfully' %(os.path.basename(source_table)))
+    msg('Fields in "%s" updated successfully' % (os.path.basename(source_table)))
     return source_table
 
 
-def concatenate(vals=[], delimiter='', number_only=False):
+def concatenate(vals=(), delimiter='', number_only=False):
     """Concatenate a list of values using a specified delimiter.
 
     Required:
@@ -2207,7 +2210,7 @@ def concatenate(vals=[], delimiter='', number_only=False):
         return delimiter.join(map(str, vals))
 
 
-def concatenate_fields(table, new_field, length, fields=[], delimiter='', number_only=False):
+def concatenate_fields(table, new_field, length, fields=(), delimiter='', number_only=False):
     """Create a new field in a table and concatenate user defined fields.
 
     This can be used in situations such as creating a Section-Township-Range
@@ -2305,11 +2308,11 @@ def list_data(top, **options):
         for filename in filenames:
             item = os.path.join(dirpath, filename)
             if exclude is not None:
-                 # skip items for which exclude is True
+                # skip items for which exclude is True
                 if exclude(item):
                     continue
             if skippers is not None:
-                 # skip items that contain any skipper values
+                # skip items that contain any skipper values
                 if any([item.lower().find(sk) > -1 for sk in skippers]):
                     continue
             if oneach is not None:
@@ -2346,16 +2349,18 @@ def create_pie_chart(fig, table, case_field, data_field='', fig_title='', x=8.5,
     >>> figure = r'C:\Temp\Figures\Election_results.png'
     >>> create_pie_chart(figure, wards, 'CANDIDATE', 'NUM_VOTES', 'Election Results')
     """
+    import re
 
-    import pylab, numpy, re
+    import pylab
+    import numpy
 
     # make sure figure is .png or .jpg
     if not re.findall('.png', fig, flags=re.IGNORECASE):
-        out_file += '.png'
+        fig += '.png'
 
     # rounding nested function, (rounding value of 0 from built in round does not return integer)
     def rnd(f, t, rounding):
-        return round((f/float(t))*100, rounding) if rounding > 0 else int((f/float(t))*100)
+        return round((f / float(t)) * 100, rounding) if rounding > 0 else int((f / float(t)) * 100)
 
     # Grab unique values
     with arcpy.da.SearchCursor(table, [case_field]) as rows:
@@ -2373,7 +2378,7 @@ def create_pie_chart(fig, table, case_field, data_field='', fig_title='', x=8.5,
         fields = [case_field, tmp_fld]
 
     # vals for slices
-    vals=[]
+    vals = []
 
     # sum values
     sum_table = str(arcpy.Statistics_analysis(table, r'in_memory\sum_tab_xxx',
@@ -2382,7 +2387,7 @@ def create_pie_chart(fig, table, case_field, data_field='', fig_title='', x=8.5,
     fields[1] = 'SUM_{0}'.format(fields[1])
     with arcpy.da.SearchCursor(sum_table, fields) as rows:
         for r in rows:
-            vals.append([r[0],r[1]])
+            vals.append([r[0], r[1]])
 
     # clean up tmp_fld if necessary
     if not data_field:
@@ -2393,7 +2398,7 @@ def create_pie_chart(fig, table, case_field, data_field='', fig_title='', x=8.5,
                 pass
 
     # Create Pie Charts
-    the_fig = pylab.figure(figsize=(x, y))
+    the_fig = pylab.figure(figsize=(x, y))  # noqa
     pylab.axes([0.1, 0.1, 0.8, 0.8])
     label = [v[0] for v in vals]
     fracs = [v[1] for v in vals]
@@ -2401,15 +2406,15 @@ def create_pie_chart(fig, table, case_field, data_field='', fig_title='', x=8.5,
     if len(label) == len(fracs):
         cmap = pylab.plt.cm.prism
         color = cmap(numpy.linspace(0., 1., len(fracs)))
-        pie_wedges = pylab.pie(fracs,colors=color,pctdistance=0.5, labeldistance=1.1)
+        pie_wedges = pylab.pie(fracs, colors=color, pctdistance=0.5, labeldistance=1.1)
         for wedge in pie_wedges[0]:
             wedge.set_edgecolor('white')
         pylab.legend(map(lambda x, f, t: '{0} ({1}, {2}%)'.format(x, f, rnd(f, t, rounding)),
-                                                                  label, fracs, tot),
-                                                                  loc=(0,0), prop={'size':8})
+                         label, fracs, tot),
+                     loc=(0, 0), prop={'size': 8})
         pylab.title(fig_title)
         pylab.savefig(fig)
-        msg('Created: %s' %fig)
+        msg('Created: %s' % fig)
     arcpy.Delete_management(sum_table)
     return fig
 
@@ -2449,24 +2454,24 @@ def combine_pdfs(out_pdf, pdf_path_or_list, wildcard=''):
     if isinstance(pdf_path_or_list, list):
         for pdf in pdf_path_or_list:
             pdfDoc.appendPages(pdf)
-            msg('Added "%s" to "%s"' %(pdf, os.path.basename(out_pdf)))
+            msg('Added "%s" to "%s"' % (pdf, os.path.basename(out_pdf)))
 
     # search path to find pdfs
     elif isinstance(pdf_path_or_list, str):
         if os.path.exists(pdf_path_or_list):
-            search = os.path.join(pdf_path_or_list,'{0}*.pdf'.format(wildcard))
+            search = os.path.join(pdf_path_or_list, '{0}*.pdf'.format(wildcard))
             for pdf in sorted(glob.glob(search)):
                 pdfDoc.appendPages(os.path.join(pdf_path_or_list, pdf))
-                msg('Added "%s" to "%s"' %(pdf, os.path.basename(out_pdf)))
+                msg('Added "%s" to "%s"' % (pdf, os.path.basename(out_pdf)))
 
     # Save and close pdf document
     pdfDoc.saveAndClose()
     del pdfDoc
-    msg('Created: %s' %out_pdf)
+    msg('Created: %s' % out_pdf)
     return out_pdf
 
 
-def request_http(url, data=None, data_type='text', headers={}):
+def request_http(url, data=None, data_type='text', headers=None):
     """Return result of an HTTP Request.
 
     Only GET and POST methods are supported. To issue a GET request, parameters
@@ -2494,8 +2499,8 @@ def request_http(url, data=None, data_type='text', headers={}):
     >>> request('http://epsg.io/4326.xml', None, 'xml')
     """
 
-    result = ''
-    callback = 'callmeback' # may not be used
+    result = ''  # noqa
+    callback = 'callmeback'  # may not be used
 
     # prepare data
     data_type = str(data_type).lower()
@@ -2505,7 +2510,7 @@ def request_http(url, data=None, data_type='text', headers={}):
         data['callback'] = callback
 
     if data is not None:
-         data = urllib.urlencode(data)
+        data = urllib.urlencode(data)
 
     # make the request
     rq = urllib2.Request(url, data, headers)
@@ -2534,7 +2539,7 @@ def request_http(url, data=None, data_type='text', headers={}):
     return result
 
 
-def request_https(url, data=None, data_type="text", headers={}):
+def request_https(url, data=None, data_type="text", headers=None):
     """Return result of an HTTPS Request.
     Uses urllib.HTTPSConnection to issue the request.
 
@@ -2562,7 +2567,7 @@ def request_https(url, data=None, data_type="text", headers={}):
     >>> request_https(u,{'f':'json'}, 'json')
     """
     url = str(url)
-    callback = '' # may not be used
+    callback = ''  # may not be used
 
     # add the https protocol if not already specified
     if not url.lower().startswith("https://"):
@@ -2570,7 +2575,7 @@ def request_https(url, data=None, data_type="text", headers={}):
 
     urlparsed = urlparse.urlparse(url)
     hostname = urlparsed.hostname
-    path = url[8 + len(hostname):] # get path as url without https and host name
+    path = url[8 + len(hostname):]  # get path as url without https and host name
 
     # connect to the host and issue the request
     with closing(httplib.HTTPSConnection(hostname)) as cns:
@@ -2607,13 +2612,13 @@ def request_https(url, data=None, data_type="text", headers={}):
         result = json.loads(s.lstrip(callback + "(").rstrip(")"))
     elif data_type == 'xml':
         from xml.etree import ElementTree as ET
-        rs = rs.strip()
+        rs = s.strip()
         result = ET.fromstring(rs)
 
     return result
 
 
-def request(url, data=None, data_type='text', headers={}):
+def request(url, data=None, data_type='text', headers=None):
     """Return result of an HTTP or HTTPS Request.
 
     Uses urllib2.Request to issue HTTP request and the urllib.HTTPSConnection
@@ -2665,7 +2670,7 @@ def request(url, data=None, data_type='text', headers={}):
         try:
             result = request_https("https://" + url, data, data_type, headers)
         except:
-            result = request_http("http://"+ url, data, data_type, headers)
+            result = request_http("http://" + url, data, data_type, headers)
     else:
         raise Exception("Protocol can only be http or https!")
 
@@ -2709,7 +2714,7 @@ def arctype_to_ptype(tp):
     >>> arctype_to_ptype("DATE") # returns datetime.datetime
     """
     tp = str(tp).upper().strip()
-    o = str
+    o = None  # noqa
     if tp == "TEXT" or tp == "STRING":
         o = str
     elif tp == "SHORT" or tp == "SMALLINTEGER":
@@ -2725,6 +2730,7 @@ def arctype_to_ptype(tp):
     else:
         o = str
     return o
+
 
 def project_coordinates(xys, in_sr, out_sr, datum_transformation=None):
     """Project list of coordinate pairs (or triplets).
@@ -2793,21 +2799,21 @@ bname = os.path.basename
 dname = os.path.dirname
 srs = getattr(arcpy, "SpatialReference", None)
 
-
 lut_field_types = {
-    'Date':'DATE',
-    'String':'TEXT',
-    'Single':'FLOAT',
-    'Double':'DOUBLE',
-    'SmallInteger':'SHORT',
-    'Integer':'LONG',
-    'GUID':'GUID',
-    'Raster':'RASTER'
+    'Date': 'DATE',
+    'String': 'TEXT',
+    'Single': 'FLOAT',
+    'Double': 'DOUBLE',
+    'SmallInteger': 'SHORT',
+    'Integer': 'LONG',
+    'GUID': 'GUID',
+    'Raster': 'RASTER'
 }
 
 
 def main():
     pass
+
 
 if __name__ == '__main__':
     main()
