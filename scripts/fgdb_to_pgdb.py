@@ -40,10 +40,11 @@ def main():
         print 'Creating a new personal GDB...'
         arcpy.CreatePersonalGDB_management(dest_fld, dest_fname)
 
-    fcs = arcpy.ListFeatureClasses()
-    for fc in tqdm(fcs):
+    print('Exporting feature classes....')
+    for fc in tqdm(arcpy.ListFeatureClasses()):
         arcpy.CopyFeatures_management(fc, iolib.fixp(args.pGDB, fc))
 
+    print('Exporting tables....')
     for tbl in tqdm(arcpy.ListTables()):
         arcpy.management.CopyRows(tbl, iolib.fixp(args.pGDB, tbl))
 
