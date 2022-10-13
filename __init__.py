@@ -36,11 +36,6 @@
 # Arcapi is a Python package which allows for modular structure. The core
 # module is called aracpi and all its content is imported when you import
 # the arcapi package.
-# Another module is called custom. All content of the custom module gets
-# imported when you import the arcapi package, but the custom module is
-# distributed as an empty script. You can paste your own custom functions
-# into this module when you download new version of arcapi. That way, you
-# can access all your python helper functions via a single package - arcapi.
 #
 # ArcGIS Extensions modules
 # -------------------------
@@ -51,6 +46,4 @@
 #
 #-------------------------------------------------------------------------------
 """
-
 from arcapi import *
-from custom import *

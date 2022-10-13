@@ -44,6 +44,18 @@ def folder_delete(fld):
     with _fuckit:
         _shutil.rmtree(fld, ignore_errors=True)
 
+def folder_exists(folder_name):
+    """Check if folder exists, does not raise an error.
+
+    Args:
+        folder_name (str): folder name
+
+    Returns:
+        bool: True if exists, else false
+    """
+    if not isinstance(folder_name, str):
+        return False
+    return _path.isdir(_path.normpath(folder_name))
 
 def folder_open(folder='.'):
     """(_string) -> void

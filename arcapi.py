@@ -27,15 +27,22 @@ import urlparse
 from contextlib import closing
 import datetime
 
-try:
-    import arcpy
-except ImportError:
-    from ArcpyMockup import ArcpyMockup
+import arcpy
 
-    arcpy = ArcpyMockup()
+import errors as _errors
 
-__version__ = '0.3.0'
-"""Version number of arcapi"""
+__version__ = '0.0.1'
+
+lut_field_types = {
+    'Date': 'DATE',
+    'String': 'TEXT',
+    'Single': 'FLOAT',
+    'Double': 'DOUBLE',
+    'SmallInteger': 'SHORT',
+    'Integer': 'LONG',
+    'GUID': 'GUID',
+    'Raster': 'RASTER'
+}
 
 
 def names(x, filterer=None):
@@ -286,7 +293,7 @@ def print_tuples(x, delim=" ", tbl=None, geoms=None, fillchar=" ", padding=1, ve
     return ret
 
 
-def head(tbl, n=10, t=True, delimiter="; ", geoms=None, cols=["*"], w="", verbose=True):
+def head(tbl, n=10, t=True, delimiter="; ", geoms=None, cols=("*"), w="", verbose=True):
     """Return top rows of table tbl.
 
 
@@ -354,7 +361,7 @@ def head(tbl, n=10, t=True, delimiter="; ", geoms=None, cols=["*"], w="", verbos
     return [hd, fs]
 
 
-def chart(x, out_file='c:\\temp\\chart.jpg', texts={}, template=None, resolution=95, openit=True):
+def chart(x, out_file='c:\\temp\\chart.jpg', texts=None, template=None, resolution=95, openit=True):
     """Create and open a map (JPG) showing x and return path to the figure path.
 
     Required:
@@ -372,6 +379,9 @@ def chart(x, out_file='c:\\temp\\chart.jpg', texts={}, template=None, resolution
     >>> chart('c:\\foo\\bar.shp')
     >>> chart('c:\\foo\\bar.shp', texts = {'txt': 'A Map'}, resolution = 300)
     """
+    if not texts:
+        texts = {}
+
     todel = []
     import re
     if template is None: template = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'chart.mxd')
@@ -462,7 +472,7 @@ def plot(x, y=None, out_file="c:\\temp\\plot.png", title="Arcapi Plot", xlab="X"
     lx = len(x)
     ly = len(y)
     if lx != ly:
-        raise ArcapiError('x and y have different length, %s and %s' % (lx, ly))
+        raise _errors.ArcapiError('x and y have different length, %s and %s' % (lx, ly))
 
     from matplotlib import pyplot as plt
     plt.scatter(x, y, c=color, marker=pch)
@@ -605,8 +615,8 @@ def bars(x, out_file='c:\\temp\\hist.png', openit=True, **args):
     # the orientation parameter seems to have no effect on pyplot.bar, therefore
     # it is handled by calling barh instead of bar if orientation is horizontal
     if orientation == 'horizontal':
-        a = barpars.pop('width', None)
-        a = barpars.pop('orientation', None)
+        _ = barpars.pop('width', None)
+        _ = barpars.pop('orientation', None)
         plt.barh(center, x, **barpars)
     else:
         plt.bar(center, x, **barpars)
@@ -703,9 +713,9 @@ def pie(x, y=None, **kwargs):
     n = len(x)
     if y is not None:
         if n != len(y):
-            raise ArcapiError("Lenghts of x and y must match, %s != %s" %
-                              (n, len(y))
-                              )
+            raise _errors.ArcapiError("Lenghts of x and y must match, %s != %s" %
+                                      (n, len(y))
+                                      )
 
         freqs = {}
         for xi, yi in zip(x, y):
@@ -754,7 +764,7 @@ def pie(x, y=None, **kwargs):
         labeldistance=labeldistance
     )
     patches = pieresult[0]
-    texts = pieresult[1]
+    _ = pieresult[1]
 
     # add title
     if main is not None:
@@ -804,9 +814,9 @@ def rename_col(tbl, col, newcol, alias=''):
         fnames = [f.name.lower() for f in flds]
         newcol = arcpy.ValidateFieldName(newcol, tbl)  # os.path.dirname(dcp))
         if col.lower() not in fnames:
-            raise ArcapiError("Field %s not found in %s." % (col, dcp))
+            raise _errors.ArcapiError("Field %s not found in %s." % (col, dcp))
         if newcol.lower() in fnames:
-            raise ArcapiError("Field %s already exists in %s" % (newcol, dcp))
+            raise _errors.ArcapiError("Field %s already exists in %s" % (newcol, dcp))
         oldF = [f for f in flds if f.name.lower() == col.lower()][0]
         if alias == "": alias = newcol
         arcpy.AddField_management(tbl, newcol, oldF.type, oldF.precision, oldF.scale, oldF.length, alias, oldF.isNullable, oldF.required, oldF.domain)
@@ -856,9 +866,9 @@ def tlist_to_table(x, out_tbl, cols, nullNumber=None, nullText=None):
     doReplaceText = False if nullText is None else True
     doReplace = doReplaceNumber or doReplaceText
 
-    dname = os.path.dirname(out_tbl)
-    if dname in ('', u''): dname = arcpy.env.workspace
-    r = arcpy.CreateTable_management(dname, os.path.basename(out_tbl))
+    dname_ = os.path.dirname(out_tbl)
+    if dname_ in ('', u''): dname_ = arcpy.env.workspace
+    r = arcpy.CreateTable_management(dname_, os.path.basename(out_tbl))
     out_tbl = r.getOutput(0)
     # add the specified fields
     for f in cols:
@@ -957,7 +967,7 @@ def meta(datasource, mode="PREPEND", **args):
         arcdir = arcpy.GetInstallInfo()['InstallDir']
         xslt = os.path.join(arcdir, template)
     if not os.path.isfile(xslt):
-        raise ArcapiError("Cannot find xslt file " + str(xslt))
+        raise _errors.ArcapiError("Cannot find xslt file " + str(xslt))
     mode = mode.upper()
 
     lut_name_by_node = {
@@ -1010,7 +1020,7 @@ def meta(datasource, mode="PREPEND", **args):
                 if parent is None:
                     em = "Could not find parent %s as parent of %s in %s " % \
                          (pparent, p, str(datasource))
-                    raise ArcapiError(em)
+                    raise _errors.ArcapiError(em)
                 subel = ET.SubElement(parent, p.split("/")[-1])
                 subel.text = str(t)
                 el = subel
@@ -1094,7 +1104,7 @@ def msg(x, timef='%Y-%m-%d %H:%M:%S', verbose=True, log=None, level='message'):
             doexit = True
         else:
             em = "Level %s not in 'message'|'warning'|'error'|0|1|2." % level
-            raise ArcapiError(em)
+            raise _errors.ArcapiError(em)
 
     if log not in ("", None):
         with open(log, "a") as fl:
@@ -1415,7 +1425,7 @@ def swsp(ws=None):
     return arcpy.env.scratchWorkspace
 
 
-def summary(tbl, cols=('*'), modes=None, maxcats=10, w='', verbose=True):
+def summary(tbl, cols='*', modes=None, maxcats=10, w='', verbose=True):
     """Summary statistics about columns of a table.
 
     Required:
@@ -1453,7 +1463,7 @@ def summary(tbl, cols=('*'), modes=None, maxcats=10, w='', verbose=True):
         for c in cols:
             fld = fields.get(c, None)
             if fld is None:
-                raise ArcapiError("Column %s not found." % c)
+                raise _errors.ArcapiError("Column %s not found." % c)
             fldtype = fld.type.upper()
             if fldtype in numtypes:
                 modes.append("NUM")
@@ -1464,7 +1474,7 @@ def summary(tbl, cols=('*'), modes=None, maxcats=10, w='', verbose=True):
     else:
         modes = [str(m).upper() for m in modes]
         if not set(modes).issubset(set(modetypes)):
-            raise ArcapiError("modes can only be one of %s" % (str(modetypes)))
+            raise _errors.ArcapiError("modes can only be one of %s" % (str(modetypes)))
 
     nc = len(cols)
     cixs = range(nc)
@@ -1493,7 +1503,7 @@ def summary(tbl, cols=('*'), modes=None, maxcats=10, w='', verbose=True):
                             if ncats < maxcats:
                                 cats[v] = 1
                             else:
-                                cats['...'] = cats.get(('...'), 0) + 1
+                                cats['...'] = cats.get('...', 0) + 1
                 elif mode == "NUM":
                     if v is None:
                         statsci["na"] += 1
@@ -1615,9 +1625,6 @@ def find(pattern, path, sub_dirs=True):
         if sub_dirs in [False, 'false', 0]:
             break
     return theFiles
-
-
-
 
 
 def meters_to_feet(in_dem, out_raster, factor=3.28084):
@@ -1745,9 +1752,9 @@ def make_poly_from_extent(ext, sr):
     sr -- spatial reference
 
     Example
-    >>> ext = arcpy.Describe(fc).extent
-    >>> sr = 4326  #WKID for WGS 84
-    >>> poly = make_poly_from_extent(ext, sr)
+    >>> ext_ = arcpy.Describe(fc).extent
+    >>> sr_ = 4326  #WKID for WGS 84
+    >>> poly = make_poly_from_extent(ext_, sr_)
     >>> arcpy.CopyFeatures_management(poly, r'C:\Temp\Project_boundary.shp')
     """
     array = arcpy.Array()
@@ -1764,12 +1771,7 @@ def list_all_fcs(gdb, wild='*', ftype='All', rel=False):
 
     if rel is True, only relative paths will be returned.  If
     false, the full path to each feature classs is returned
-    Relative path Example:
 
-    >>> # Return relative paths for fc
-    >>> gdb = r'C:\TEMP\test.gdb'
-    >>> for fc in getFCPaths(gdb, rel=True):
-    >>> print fc
 
     Utilities\Storm_Mh
     Utilities\Storm_Cb
@@ -1802,6 +1804,11 @@ def list_all_fcs(gdb, wild='*', ftype='All', rel=False):
     Optional:
     rel -- option to have relative paths. Default is false;
            will include full paths unless rel is set to True
+
+    Examples:
+        # Return relative paths for fc
+        >>> for fc in getFCPaths(r'C:\TEMP\test.gdb', rel=True):
+        >>> print fc
     """
     # feature type (add all in case '' is returned
     # from script tool
@@ -1887,7 +1894,7 @@ def get_field_type(in_field, fc=''):
     >>> # field type of 'String' needs to be 'TEXT' to be added to table
     >>> # This is a text type field
     >>> # now get esri field type
-    >>> print getFieldType(table, 'PARCEL_ID') #esri field.type return is 'String', we want 'TEXT'
+    >>> print getFieldType(table, 'PARCEL_ID') #esri field.type return is 'String', we want 'TEXT'  # noqa
     TEXT
     """
     if fc:
@@ -1941,7 +1948,7 @@ def add_fields_from_table(in_tab, template, add_fields=()):
     add_fields -- fields from template table to add to input table (list)
 
     Example:
-    >>> add_fields_from_table(parcels, permits, ['Permit_Num', 'Permit_Date'])
+    >>> add_fields_from_table(parcels, permits, ['Permit_Num', 'Permit_Date'])  # noqa
     """
 
     # fix args if args from script tool
@@ -1968,10 +1975,9 @@ def create_field_name(fc, new_field):
     fc -- feature class, feature layer, table, or table view
     new_field -- new field name, will be altered if field already exists
 
-    Example:
-    >>> fc = 'c:\\testing.gdb\\ne_110m_admin_0_countries'
-    >>> create_field_name(fc, 'NEWCOL') # NEWCOL
-    >>> create_field_name(fc, 'Shape') # Shape_1
+    Examples:
+    >>> create_field_name('c:\\testing.gdb\\ne_110m_admin_0_countries', 'NEWCOL') # NEWCOL
+    >>> create_field_name('c:\\testing.gdb\\ne_110m_admin_0_countries', 'Shape') # Shape_1
     """
 
     # if fc is a table view or a feature layer, some fields may be hidden;
@@ -1994,7 +2000,7 @@ def create_field_name(fc, new_field):
         while new_field.lower() in fields:
 
             if count > 1000:
-                raise ArcapiError('Maximum number of iterations reached in uniqueFieldName.')
+                raise _errors.ArcapiError('Maximum number of iterations reached in uniqueFieldName.')
 
             if len(new_field) > maxlen:
                 ind = maxlen - (1 + len(str(count)))
@@ -2202,9 +2208,9 @@ def list_data(top, **options):
 
     Example:
     >>> list_data(r'c:\temp')
-    >>> skippers = (".txt", ".xls", ".ttf")
+    >>> skippers_ = (".txt", ".xls", ".ttf")
     >>> exclude = lambda a: "_expired2013" in a
-    >>> list_data(r'c:\temp', exclude=exclude, skippers=skippers)
+    >>> list_data(r'c:\temp', exclude=exclude, skippers=skippers_)
     """
 
     exclude = options.get('exclude', None)
@@ -2213,7 +2219,7 @@ def list_data(top, **options):
     onerror = options.get('onerror', None)
     datatypes = options.get('datatypes', None)
     types = options.get('type', None)
-    skippers = options.get('skippers', None)
+    skippers = options.get('skippers_', None)
 
     if skippers is not None:
         skippers = [str(sk).lower() for sk in skippers]
@@ -2282,7 +2288,7 @@ def create_pie_chart(fig, table, case_field, data_field='', fig_title='', x=8.5,
 
     # Grab unique values
     with arcpy.da.SearchCursor(table, [case_field]) as rows:
-        cases = sorted(list(set(r[0] for r in rows)))
+        _ = sorted(list(set(r[0] for r in rows)))
 
     # if not data_field
     tmp_fld = 'cnt_xx_xx_'
@@ -2322,7 +2328,7 @@ def create_pie_chart(fig, table, case_field, data_field='', fig_title='', x=8.5,
     fracs = [v[1] for v in vals]
     tot = [sum(fracs)] * len(fracs)
     if len(label) == len(fracs):
-        cmap = pylab.plt.cm.prism
+        cmap = pylab.plt.cm.prism  # noqa
         color = cmap(numpy.linspace(0., 1., len(fracs)))
         pie_wedges = pylab.pie(fracs, colors=color, pctdistance=0.5, labeldistance=1.1)
         for wedge in pie_wedges[0]:
@@ -2349,18 +2355,18 @@ def combine_pdfs(out_pdf, pdf_path_or_list, wildcard=''):
     wildcard -- optional wildcard search (only applies
         when searching through paths)
 
-    Example:
-    >>> # test function with path
-    >>> out_pdf = r'C:\Users\calebma\Desktop\test.pdf'
-    >>> path = r'C:\Users\calebma\Desktop\pdfTest'
-    >>> combine_pdfs(out_pdf, path)
+    Examples:
+        >>> # test function with path  # noqa
+        >>> out_pdf = r'C:\Users\calebma\Desktop\test.pdf'  # noqa
+        >>> path = r'C:\Users\calebma\Desktop\pdfTest'  # noqa
+        >>> combine_pdfs(out_pdf, path)  # noqa
 
-    >>> # test function with list
-    >>> out = r'C:\Users\calebma\Desktop\test2.pdf'
-    >>> pdfs = [r'C:\Users\calebma\Desktop\pdfTest\Mailing_Labels5160.pdf',
-                r'C:\Users\calebma\Desktop\pdfTest\Mailing_Taxpayer.pdf',
-                r'C:\Users\calebma\Desktop\pdfTest\stfr.pdf']
-    >>> combine_pdfs(out, pdfs)
+        >>> # test function with list
+        >>> out = r'C:\Users\calebma\Desktop\test2.pdf'  # noqa
+        >>> pdfs = [r'C:\Users\calebma\Desktop\pdfTest\Mailing_Labels5160.pdf',  # noqa
+                    r'C:\Users\calebma\Desktop\pdfTest\Mailing_Taxpayer.pdf',  # noqa
+                    r'C:\Users\calebma\Desktop\pdfTest\stfr.pdf']  # noqa
+        >>> combine_pdfs(out, pdfs)  # noqa
     """
 
     import glob
@@ -2688,45 +2694,12 @@ def project_coordinates(xys, in_sr, out_sr, datum_transformation=None):
     return xyspr
 
 
-class ArcapiError(Exception):
-    """A type of exception raised from arcapi module"""
-    pass
-
-
-"""
-Aliases
-=======
-Modified to allow computers without arcpy import arcapi.
-That is why instead of just:
-search = arcpy.da.SearchCursor
-we need:
-searcher = getattr(getattr(arcpy, "da", None), "SearchCursor", None)
-"""
-searcher = getattr(getattr(arcpy, "da", None), "SearchCursor", None)
-updater = getattr(getattr(arcpy, "da", None), "UpdateCursor", None)
-inserter = getattr(getattr(arcpy, "da", None), "InsertCursor", None)
-add_col = getattr(getattr(arcpy, "management", None), "AddField", None)
-descr = getattr(arcpy, "Describe", None)
-flyr = getattr(getattr(arcpy, "management", None), "MakeFeatureLayer", None)
-rlyr = getattr(getattr(arcpy, "management", None), "MakeRasterLayer", None)
-tviw = getattr(getattr(arcpy, "management", None), "MakeTableView", None)
 tos = to_scratch
 wsps = swsp
 osj = os.path.join
 bname = os.path.basename
 dname = os.path.dirname
 srs = getattr(arcpy, "SpatialReference", None)
-
-lut_field_types = {
-    'Date': 'DATE',
-    'String': 'TEXT',
-    'Single': 'FLOAT',
-    'Double': 'DOUBLE',
-    'SmallInteger': 'SHORT',
-    'Integer': 'LONG',
-    'GUID': 'GUID',
-    'Raster': 'RASTER'
-}
 
 
 def main():
