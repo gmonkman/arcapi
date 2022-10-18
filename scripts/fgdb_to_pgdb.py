@@ -3,7 +3,8 @@ Export a file geodatabase to a personal geodatabase.
 
 Does not currently recreate/export relationships
 
-TODO: Rejig so also copies relationships. Use Copy_management, but have to deal with problem described here; https://gis.stackexchange.com/questions/50846/copy-two-datasets-that-particpate-in-the-same-relationship-class
+Notes:
+    See fgdb_to_pgdb2, this copies related tables and their relationships.
 """
 import os  # noqa
 import os.path as path  # noqa

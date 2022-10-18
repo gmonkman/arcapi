@@ -49,7 +49,7 @@ def main():
         with fuckit:
             arcpy.management.Copy(fc, iolib.fixp(args.dest_gdb, fc))
 
-    print('Exporting tables....')
+    print 'Exporting tables....'
     for tbl in tqdm(arcpy.ListTables()):
         with fuckit:
             arcpy.management.Copy(tbl,  iolib.fixp(args.dest_gdb, tbl))
