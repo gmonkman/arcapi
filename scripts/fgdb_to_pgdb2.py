@@ -1,7 +1,7 @@
 """
 Export a file geodatabase to a personal geodatabase.
 
-Does not currently recreate/export relationships
+This does recreate/export relationships, unlike fgdb_to_pgdb.py
 
 TODO: Error handling and logging
 """
@@ -24,7 +24,6 @@ def main():
     cmdline.add_argument('fGDB', type=np, help='The source file geodatabase')
     cmdline.add_argument('pGDB', type=np, help='The destination personal geodatabase')
     cmdline.add_argument('-recreate', '--recreate', help='Delete and recreate the personal GDB', action='store_true')
-    # cmdline.add_argument('-overwrite', '--overwrite', help='Allow overwriting in the personal GDB', action='store_true')
 
     args = cmdline.parse_args()
 
